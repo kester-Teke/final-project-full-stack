@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from 'react';
 
 export default function Home() {
   const [counters, setCounters] = useState({ players: 0, goals: 0, trophies: 0 });
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -17,6 +18,25 @@ export default function Home() {
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
   const y = useTransform(scrollYProgress, [0, 0.5], [0, 200]);
 
+  // Initialiser window size uniquement côté client
+  useEffect(() => {
+    setWindowSize({
+      width: window.innerWidth,
+      height: window.innerHeight
+    });
+    
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Animation des compteurs avec performance.now() uniquement côté client
   useEffect(() => {
     const targets = { players: 1250, goals: 3420, trophies: 156 };
     const duration = 2500;
@@ -36,7 +56,8 @@ export default function Home() {
       if (progress < 1) requestAnimationFrame(updateCounters);
     };
     
-    requestAnimationFrame(updateCounters);
+    const animationFrame = requestAnimationFrame(updateCounters);
+    return () => cancelAnimationFrame(animationFrame);
   }, []);
 
   const features = [
@@ -52,6 +73,18 @@ export default function Home() {
     { value: counters.trophies, label: "Trophées", suffix: "", icon: Trophy }
   ];
 
+  // État de chargement initial pour éviter l'erreur window
+  if (windowSize.width === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-slate-900 to-blue-950 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} className="relative min-h-screen overflow-x-hidden">
       
@@ -63,12 +96,15 @@ export default function Home() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:50px_50px]" />
       </div>
       
-      {/* Bulles d'arrière-plan animées */}
+      {/* Bulles d'arrière-plan animées - CORRECTION ICI */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
+        {windowSize.width > 0 && [...Array(20)].map((_, i) => (
           <motion.div
             key={i}
-            initial={{ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight }}
+            initial={{ 
+              x: Math.random() * windowSize.width, 
+              y: Math.random() * windowSize.height 
+            }}
             animate={{ 
               y: [null, -100, -200],
               x: [null, Math.random() * 100 - 50, Math.random() * 100 - 50],
