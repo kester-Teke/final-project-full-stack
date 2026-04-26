@@ -1,0 +1,1 @@
+connection mongo: mongodb+srv://kame:KAMEtravail2003@cluster0.soiolva.mongodb.net/?appName=Cluster0
