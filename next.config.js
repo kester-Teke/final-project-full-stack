@@ -6,9 +6,9 @@ const nextConfig = {
             hostname: 'via.placeholder.com',
             port: '',
             pathname: '/**',
-        }, ],
+        }],
     },
     reactStrictMode: true,
 };
 
-export default nextConfig;
+module.exports = nextConfig;
